@@ -12,7 +12,11 @@
     "type": "git",
     "url": "git+https://github.com/ebh2024/Sistema-de-Gestion-de-Pedidos-y-Menu-de-un-Restaurante_BACKEND.git"
   },
-  "keywords": ["restaurant", "api", "express"],
+  "keywords": [
+    "restaurant",
+    "api",
+    "express"
+  ],
   "author": "",
   "license": "ISC",
   "bugs": {
@@ -20,10 +24,13 @@
   },
   "homepage": "https://github.com/ebh2024/Sistema-de-Gestion-de-Pedidos-y-Menu-de-un-Restaurante_BACKEND#readme",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "morgan": "^1.10.1"
+    "morgan": "^1.10.1",
+    "mysql2": "^3.15.2",
+    "sequelize": "^6.37.7"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
