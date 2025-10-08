@@ -1,0 +1,31 @@
+{
+  "name": "sistema-de-gestion-de-pedidos-y-menu-de-un-restaurante_backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ebh2024/Sistema-de-Gestion-de-Pedidos-y-Menu-de-un-Restaurante_BACKEND.git"
+  },
+  "keywords": ["restaurant", "api", "express"],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ebh2024/Sistema-de-Gestion-de-Pedidos-y-Menu-de-un-Restaurante_BACKEND/issues"
+  },
+  "homepage": "https://github.com/ebh2024/Sistema-de-Gestion-de-Pedidos-y-Menu-de-un-Restaurante_BACKEND#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "morgan": "^1.10.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
