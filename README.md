@@ -1,13 +1,39 @@
 # Sistema de Gestión de Pedidos y Menú de un Restaurante - Backend
 
-Este es el backend para el sistema de gestión de pedidos y menú de un restaurante, implementado con Node.js, Express, Sequelize y MySQL.
+Este repositorio contiene el código fuente del backend para un sistema de gestión de pedidos y menú de un restaurante. Está diseñado para manejar la lógica de negocio, la autenticación de usuarios con diferentes roles (administrador, cocinero, mesero) y la interacción con la base de datos para gestionar pedidos, menús y usuarios.
+
+## Tecnologías Utilizadas
+
+*   **Node.js**: Entorno de ejecución para JavaScript.
+*   **Express.js**: Framework web para Node.js, utilizado para construir la API RESTful.
+*   **Sequelize**: ORM (Object-Relational Mapper) para Node.js, que facilita la interacción con bases de datos relacionales.
+*   **MySQL**: Sistema de gestión de bases de datos relacionales.
+*   **JWT (JSON Web Tokens)**: Para la autenticación y autorización de usuarios.
+*   **Bcrypt.js**: Para el hash seguro de contraseñas.
+
+## Estructura del Proyecto
+
+El proyecto sigue una estructura modular para facilitar la organización y el mantenimiento:
+
+*   `config/`: Contiene la configuración de la base de datos.
+*   `controllers/`: Lógica de negocio para cada ruta.
+*   `middleware/`: Funciones intermedias para autenticación y manejo de errores.
+*   `models/`: Definiciones de los modelos de la base de datos (Sequelize).
+*   `routes/`: Definición de las rutas de la API.
+*   `utils/`: Funciones de utilidad, como la generación de tokens JWT.
+*   `tests/`: Archivos de pruebas unitarias e integración.
+*   `server.js`: Punto de entrada principal de la aplicación.
+*   `.env`: Variables de entorno para la configuración de la aplicación.
 
 ## Endpoints de Usuarios
 
 Los siguientes endpoints están disponibles para la gestión de usuarios:
 
 -   `POST /api/users/register`: Registra un nuevo usuario.
-    -   **Roles disponibles**: `admin`, `cocinero`, `mesero`.
+    -   **Roles disponibles**:
+        *   `admin`: Acceso completo al sistema, puede gestionar usuarios, menús y pedidos.
+        *   `cocinero`: Puede ver y actualizar el estado de los pedidos relacionados con la cocina.
+        *   `mesero`: Puede tomar pedidos, gestionar mesas y ver el estado de los pedidos.
     -   **Cuerpo de la solicitud (JSON)**:
         ```json
         {
@@ -59,6 +85,14 @@ Los siguientes endpoints están disponibles para la gestión de usuarios:
             "role": "mesero"
         }
         ```
+
+## Pruebas
+
+Para ejecutar las pruebas unitarias y de integración, utiliza el siguiente comando:
+
+```bash
+npm test
+```
 
 ## Configuración de la Base de Datos (MySQL)
 
