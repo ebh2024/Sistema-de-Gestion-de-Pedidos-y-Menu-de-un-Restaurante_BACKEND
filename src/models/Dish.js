@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-const User = sequelize.define('User', {
+const Dish = sequelize.define('Dish', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -11,28 +11,23 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  email: {
+  description: {
     type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
+    allowNull: true,
   },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  role: {
-    type: DataTypes.ENUM('admin', 'cook', 'waiter'),
+  price: {
+    type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
   },
-  is_active: {
+  available: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
 }, {
-  tableName: 'users',
+  tableName: 'dishes',
   timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at',
 });
 
-module.exports = User;
+module.exports = Dish;

@@ -1,10 +1,17 @@
 const { sequelize } = require('../config/database');
 const User = require('./User');
+const Dish = require('./Dish');
+const Table = require('./Table');
+const Order = require('./Order');
+const OrderDetail = require('./OrderDetail');
 
 // Objeto que contendrá todos los modelos
 const models = {
-  User
-  // Aquí se agregarán: Dish, Table, Order, OrderDetail
+  User,
+  Dish,
+  Table,
+  Order,
+  OrderDetail
 };
 
 // Configurar todas las asociaciones
