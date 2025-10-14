@@ -21,6 +21,19 @@ Object.keys(models).forEach(modelName => {
   }
 });
 
+// Relaciones
+User.hasMany(Order, { foreignKey: 'userId' });
+Order.belongsTo(User, { foreignKey: 'userId' });
+
+Table.hasMany(Order, { foreignKey: 'tableId' });
+Order.belongsTo(Table, { foreignKey: 'tableId' });
+
+Order.hasMany(OrderDetail, { foreignKey: 'orderId' });
+OrderDetail.belongsTo(Order, { foreignKey: 'orderId' });
+
+Dish.hasMany(OrderDetail, { foreignKey: 'dishId' });
+OrderDetail.belongsTo(Dish, { foreignKey: 'dishId' });
+
 // Función para sincronizar la base de datos
 const syncDatabase = async (options = {}) => {
   try {
