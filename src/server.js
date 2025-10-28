@@ -45,8 +45,12 @@ app.get('/', (req, res) => {
   });
 });
 
-// TODO: Aquí irán las rutas de la aplicación
-// app.use('/api/auth', authRoutes);
+// Rutas de la aplicación
+const authRoutes = require('./routes/authRoutes');
+
+app.use('/api/auth', authRoutes);
+
+// TODO: Aquí irán las demás rutas
 // app.use('/api/users', userRoutes);
 // app.use('/api/dishes', dishRoutes);
 // app.use('/api/tables', tableRoutes);
