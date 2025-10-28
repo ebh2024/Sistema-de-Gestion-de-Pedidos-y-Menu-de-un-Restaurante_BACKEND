@@ -75,19 +75,36 @@ const createDish = async (req, res, next) => {
   try {
     const { name, description, price, available } = req.body;
 
-    // Validar campos requeridos
-    if (!name || !price) {
+
+    // Validar nombre
+    if (typeof name !== 'string' || name.trim().length < 2 || name.trim().length > 100) {
       return res.status(400).json({
         success: false,
-        message: 'El nombre y el precio son requeridos'
+        message: 'El nombre es requerido y debe tener entre 2 y 100 caracteres'
       });
     }
 
-    // Validar que el precio sea un número positivo
-    if (isNaN(price) || parseFloat(price) <= 0) {
+    // Validar descripción (opcional)
+    if (description !== undefined && description !== null && (typeof description !== 'string' || description.length > 255)) {
       return res.status(400).json({
         success: false,
-        message: 'El precio debe ser un número positivo'
+        message: 'La descripción debe ser texto de hasta 255 caracteres'
+      });
+    }
+
+    // Validar precio
+    if (price === undefined || price === null || isNaN(price) || parseFloat(price) <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'El precio es requerido y debe ser un número positivo'
+      });
+    }
+
+    // Validar available (opcional)
+    if (available !== undefined && typeof available !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        message: 'El campo available debe ser booleano (true/false)'
       });
     }
 
@@ -128,6 +145,27 @@ const updateDish = async (req, res, next) => {
       });
     }
 
+
+    // Validar nombre si se proporciona
+    if (name !== undefined) {
+      if (typeof name !== 'string' || name.trim().length < 2 || name.trim().length > 100) {
+        return res.status(400).json({
+          success: false,
+          message: 'El nombre debe tener entre 2 y 100 caracteres'
+        });
+      }
+    }
+
+    // Validar descripción si se proporciona
+    if (description !== undefined && description !== null) {
+      if (typeof description !== 'string' || description.length > 255) {
+        return res.status(400).json({
+          success: false,
+          message: 'La descripción debe ser texto de hasta 255 caracteres'
+        });
+      }
+    }
+
     // Validar precio si se proporciona
     if (price !== undefined) {
       if (isNaN(price) || parseFloat(price) <= 0) {
@@ -136,6 +174,14 @@ const updateDish = async (req, res, next) => {
           message: 'El precio debe ser un número positivo'
         });
       }
+    }
+
+    // Validar available si se proporciona
+    if (available !== undefined && typeof available !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        message: 'El campo available debe ser booleano (true/false)'
+      });
     }
 
     // Actualizar el plato
