@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { sequelize } = require('../config/database');
 
 const Order = sequelize.define('Order', {
   userId: {
@@ -14,7 +14,7 @@ const Order = sequelize.define('Order', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'tables',
+      model: 'Tables',
       key: 'id'
     }
   },
