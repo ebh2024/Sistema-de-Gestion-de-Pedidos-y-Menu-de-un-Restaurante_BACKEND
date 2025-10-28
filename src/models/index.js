@@ -59,5 +59,6 @@ module.exports = {
   syncDatabase,
   // Exportar modelos individuales para facilitar imports
   User,
-  Token
+  Token,
+  Dish
 };
