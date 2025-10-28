@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const { User } = require('../models');
-const { generateToken, verifyToken } = require('../utils/jwt');
+const { generateToken } = require('../utils/jwt');
+const { sendEmail, generatePasswordResetEmail } = require('../utils/emailService');
 
 /**
  * Controller para registrar un nuevo usuario
@@ -143,63 +145,113 @@ const login = async (req, res, next) => {
 };
 
 /**
- * Controller para solicitar reset de contraseña
+ * Controller para solicitar recuperación de contraseña
  * POST /api/auth/forgot-password
  */
 const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
+
+    // Validar email
     if (!email) {
-      return res.status(400).json({ success: false, message: 'Email es requerido' });
+      return res.status(400).json({
+        success: false,
+        message: 'El email es requerido'
+      });
     }
 
+    // Buscar el usuario
     const user = await User.findOne({ where: { email } });
+    
+    // Por seguridad, no revelamos si el email existe o no
     if (!user) {
-      // Para no filtrar si el email existe, devolver mensaje genérico
-      return res.status(200).json({ success: true, message: 'Si el email está registrado, recibirás instrucciones para recuperar la contraseña' });
+      return res.status(200).json({
+        success: true,
+        message: 'Si el email existe, recibirás un enlace para recuperar tu contraseña'
+      });
     }
 
-    // Generar un token temporal con expiración corta (ej. 1h)
-    const resetToken = generateToken({ id: user.id, email: user.email }, process.env.JWT_EXPIRES_RESET || '1h');
+    // Generar token de recuperación
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hora
 
-    // En un sistema real deberíamos enviar un correo con el token. Aquí devolvemos el token en la respuesta para pruebas
-    return res.status(200).json({ success: true, message: 'Token de reseteo generado', data: { resetToken } });
+    // Guardar token en la base de datos
+    await user.update({
+      resetPasswordToken: resetToken,
+      resetPasswordExpires
+    });
+
+    // Generar y enviar email
+    const resetEmailHtml = generatePasswordResetEmail(resetToken);
+    
+    try {
+      await sendEmail(
+        user.email,
+        'Recuperación de Contraseña - Sistema de Restaurante',
+        resetEmailHtml
+      );
+    } catch (emailError) {
+      console.error('Error al enviar email:', emailError);
+      // No revelamos error de email por seguridad
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Si el email existe, recibirás un enlace para recuperar tu contraseña'
+    });
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * Controller para resetear la contraseña usando el token
+ * Controller para restablecer la contraseña
  * POST /api/auth/reset-password
  */
 const resetPassword = async (req, res, next) => {
   try {
-    const { token, newPassword } = req.body;
-    if (!token || !newPassword) {
-      return res.status(400).json({ success: false, message: 'Token y nueva contraseña son requeridos' });
+    const { token, password } = req.body;
+
+    // Validar campos requeridos
+    if (!token || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token y nueva contraseña son requeridos'
+      });
     }
 
-    // Verificar token
-    let payload;
-    try {
-      payload = verifyToken(token);
-    } catch (err) {
-      return res.status(401).json({ success: false, message: 'Token inválido o expirado' });
-    }
+    // Buscar usuario con el token válido
+    const user = await User.findOne({
+      where: {
+        resetPasswordToken: token,
+        resetPasswordExpires: {
+          [require('sequelize').Op.gt]: new Date()
+        }
+      }
+    });
 
-    const user = await User.findByPk(payload.id);
     if (!user) {
-      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+      return res.status(400).json({
+        success: false,
+        message: 'Token inválido o expirado'
+      });
     }
 
-    // Encriptar nueva contraseña y actualizar
+    // Encriptar nueva contraseña
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-    user.password = hashedPassword;
-    await user.save();
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    return res.status(200).json({ success: true, message: 'Contraseña actualizada correctamente' });
+    // Actualizar contraseña y limpiar tokens
+    await user.update({
+      password: hashedPassword,
+      resetPasswordToken: null,
+      resetPasswordExpires: null
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Contraseña restablecida exitosamente'
+    });
   } catch (error) {
     next(error);
   }

@@ -28,6 +28,7 @@
   },
   "homepage": "https://github.com/ebh2024/Sistema-de-Gestion-de-Pedidos-y-Menu-de-un-Restaurante_BACKEND#readme",
   "dependencies": {
+    "@sendgrid/mail": "^8.1.6",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",

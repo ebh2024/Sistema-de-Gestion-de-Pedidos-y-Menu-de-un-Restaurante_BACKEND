@@ -18,14 +18,14 @@ router.post('/login', login);
 
 /**
  * @route   POST /api/auth/forgot-password
- * @desc    Solicitar reseteo de contraseña (envía token)
+ * @desc    Solicitar recuperación de contraseña
  * @access  Public
  */
 router.post('/forgot-password', forgotPassword);
 
 /**
  * @route   POST /api/auth/reset-password
- * @desc    Resetear contraseña usando token
+ * @desc    Restablecer contraseña con token
  * @access  Public
  */
 router.post('/reset-password', resetPassword);
