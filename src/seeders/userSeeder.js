@@ -4,32 +4,33 @@ import { sequelize } from "../config/database.js";
 
 const users = [
   {
-    nombre: "Admin User",
-    correo: "admin@example.com",
-    contraseña: "password123",
-    rol: "admin",
+    name: "Admin User",
+    email: "admin@example.com",
+    password: "password123",
+    role: "admin",
   },
   {
-    nombre: "Cocinero User",
-    correo: "cocinero@example.com",
-    contraseña: "password123",
-    rol: "cocinero",
+    name: "Cook User",
+    email: "cook@example.com",
+    password: "password123",
+    role: "cook",
   },
   {
-    nombre: "Mesero User",
-    correo: "mesero@example.com",
-    contraseña: "password123",
-    rol: "mesero",
+    name: "Waiter User",
+    email: "waiter@example.com",
+    password: "password123",
+    role: "waiter",
   },
 ];
 
 const seedUsers = async () => {
   try {
-    await sequelize.sync({ force: true }); // Esto eliminará y volverá a crear las tablas
+    // Solo sincronizar sin forzar recreación de tablas
+    await sequelize.sync();
 
     for (const user of users) {
       const salt = await bcrypt.genSalt(10);
-      user.contraseña = await bcrypt.hash(user.contraseña, salt);
+      user.password = await bcrypt.hash(user.password, salt);
       await User.create(user);
     }
 
