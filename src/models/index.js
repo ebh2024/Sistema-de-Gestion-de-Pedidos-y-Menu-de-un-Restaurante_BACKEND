@@ -4,6 +4,7 @@ const Dish = require('./Dish');
 const Table = require('./Table');
 const Order = require('./Order');
 const OrderDetail = require('./OrderDetail');
+const Token = require('./Token');
 
 // Objeto que contendrá todos los modelos
 const models = {
@@ -11,7 +12,8 @@ const models = {
   Dish,
   Table,
   Order,
-  OrderDetail
+  OrderDetail,
+  Token
 };
 
 // Configurar todas las asociaciones
@@ -34,6 +36,10 @@ OrderDetail.belongsTo(Order, { foreignKey: 'orderId' });
 Dish.hasMany(OrderDetail, { foreignKey: 'dishId' });
 OrderDetail.belongsTo(Dish, { foreignKey: 'dishId' });
 
+// Relación User - Token
+User.hasMany(Token, { foreignKey: 'user_id', as: 'tokens' });
+Token.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
 // Función para sincronizar la base de datos
 const syncDatabase = async (options = {}) => {
   try {
@@ -52,5 +58,6 @@ module.exports = {
   models,
   syncDatabase,
   // Exportar modelos individuales para facilitar imports
-  User
+  User,
+  Token
 };
