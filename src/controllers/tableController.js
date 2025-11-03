@@ -79,6 +79,12 @@ const createTable = async (req, res, next) => {
       return res.status(400).json({ success: false, message: `status inválido. Valores permitidos: ${validStatuses.join(', ')}` });
     }
 
+    // Validar número único de mesa
+    const existing = await Table.findOne({ where: { number: num } });
+    if (existing) {
+      return res.status(409).json({ success: false, message: 'Ya existe una mesa con ese número' });
+    }
+
     const newTable = await Table.create({ number: num, capacity: cap, status: status || 'available' });
 
     return res.status(201).json({ success: true, message: 'Mesa creada', data: newTable });
@@ -101,6 +107,11 @@ const updateTable = async (req, res, next) => {
     if (number !== undefined) {
       const num = parseInt(number, 10);
       if (isNaN(num) || num <= 0) return res.status(400).json({ success: false, message: 'number debe ser entero positivo' });
+      // Verificar que no exista otra mesa con el mismo número
+      const existing = await Table.findOne({ where: { number: num } });
+      if (existing && existing.id !== table.id) {
+        return res.status(409).json({ success: false, message: 'Ya existe otra mesa con ese número' });
+      }
       table.number = num;
     }
 
