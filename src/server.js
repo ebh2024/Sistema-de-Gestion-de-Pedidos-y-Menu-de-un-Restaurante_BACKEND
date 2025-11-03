@@ -48,9 +48,11 @@ app.get('/', (req, res) => {
 // Rutas de la aplicación
 const authRoutes = require('./routes/authRoutes');
 const dishRoutes = require('./routes/dishRoutes');
+const tableRoutes = require('./routes/tableRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/dishes', dishRoutes);
+app.use('/api/tables', tableRoutes);
 
 // TODO: Aquí irán las demás rutas
 // app.use('/api/users', userRoutes);
