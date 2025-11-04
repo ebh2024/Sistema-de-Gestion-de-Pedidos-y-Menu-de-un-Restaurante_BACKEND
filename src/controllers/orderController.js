@@ -1,4 +1,5 @@
 const { Order, OrderDetail, Dish, Table, User } = require('../models');
+const PDFDocument = require('pdfkit');
 const { Op } = require('sequelize');
 const { sequelize } = require('../config/database');
 
@@ -414,10 +415,95 @@ const updateOrderStatus = async (req, res, next) => {
   }
 };
 
+/**
+ * Generar PDF de ticket para un pedido
+ * GET /api/orders/:id/ticket
+ */
+const generateOrderTicketPDF = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const order = await Order.findByPk(id, {
+      include: [
+        { model: User, attributes: ['id', 'name', 'email', 'role'] },
+        { model: Table, attributes: ['id', 'number'] },
+        {
+          model: OrderDetail,
+          include: [{ model: Dish, attributes: ['id', 'name', 'price'] }]
+        }
+      ]
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Pedido no encontrado'
+      });
+    }
+
+    // Configurar headers para PDF
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="ticket-pedido-${order.id}.pdf"`);
+
+    const doc = new PDFDocument({ size: 'A4', margin: 50 });
+    doc.pipe(res);
+
+    // Encabezado
+    doc
+      .fontSize(20)
+      .text('Restaurante - Ticket de Pedido', { align: 'center' })
+      .moveDown(0.5);
+
+    doc
+      .fontSize(12)
+      .text(`Pedido #${order.id}`)
+      .text(`Fecha: ${new Date(order.created_at || order.createdAt).toLocaleString()}`)
+      .text(`Mesa: ${order.Table?.number ?? order.tableId}`)
+      .text(`Atendido por: ${order.User?.name ?? 'N/A'}`)
+      .moveDown();
+
+    // Línea separadora
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke().moveDown();
+
+    // Detalle de items
+    doc.fontSize(14).text('Detalle', { underline: true }).moveDown(0.5);
+
+    doc.fontSize(12);
+    let subtotal = 0;
+    order.OrderDetails.forEach((detail) => {
+      const name = detail.Dish?.name || `Plato ${detail.dishId}`;
+      const qty = detail.quantity;
+      const price = Number(detail.price);
+      const lineTotal = qty * price;
+      subtotal += lineTotal;
+
+      doc.text(`${name}  x${qty}  -  $${price.toFixed(2)}  =  $${lineTotal.toFixed(2)}`);
+    });
+
+    doc.moveDown();
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke().moveDown(0.5);
+
+    // Totales
+    const total = Number(order.total ?? subtotal);
+    doc
+      .fontSize(12)
+      .text(`Subtotal: $${subtotal.toFixed(2)}`, { align: 'right' })
+      .text(`Total: $${total.toFixed(2)}`, { align: 'right' })
+      .moveDown();
+
+    doc.text('¡Gracias por su visita!', { align: 'center' });
+
+    // Finalizar PDF
+    doc.end();
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createOrder,
   getAllOrders,
   getOrderById,
-  updateOrderStatus
+  updateOrderStatus,
+  generateOrderTicketPDF
 };
-

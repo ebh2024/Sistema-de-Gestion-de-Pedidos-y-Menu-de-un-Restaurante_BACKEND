@@ -5,7 +5,8 @@ const {
   createOrder,
   getAllOrders,
   getOrderById,
-  updateOrderStatus
+  updateOrderStatus,
+  generateOrderTicketPDF
 } = require('../controllers/orderController');
 
 /**
@@ -30,6 +31,13 @@ router.get('/', auth, getAllOrders);
 router.get('/:id', auth, getOrderById);
 
 /**
+ * @route   GET /api/orders/:id/ticket
+ * @desc    Generar y devolver el PDF del ticket del pedido
+ * @access  Private
+ */
+router.get('/:id/ticket', auth, generateOrderTicketPDF);
+
+/**
  * @route   PUT /api/orders/:id
  * @desc    Actualizar estado de un pedido
  * @access  Private
@@ -37,4 +45,3 @@ router.get('/:id', auth, getOrderById);
 router.put('/:id', auth, updateOrderStatus);
 
 module.exports = router;
-
