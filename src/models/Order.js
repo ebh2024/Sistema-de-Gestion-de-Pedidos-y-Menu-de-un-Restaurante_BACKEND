@@ -2,6 +2,11 @@ const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 
 const Order = sequelize.define('Order', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   userId: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -26,6 +31,11 @@ const Order = sequelize.define('Order', {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false
   }
+}, {
+  tableName: 'orders',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
 });
 
 module.exports = Order;

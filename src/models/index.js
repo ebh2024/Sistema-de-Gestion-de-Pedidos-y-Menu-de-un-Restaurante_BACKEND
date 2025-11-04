@@ -60,5 +60,8 @@ module.exports = {
   // Exportar modelos individuales para facilitar imports
   User,
   Token,
-  Dish
+  Dish,
+  Order,
+  OrderDetail,
+  Table
 };
