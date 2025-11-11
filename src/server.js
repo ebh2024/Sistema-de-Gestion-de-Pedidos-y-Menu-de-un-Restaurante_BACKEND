@@ -85,10 +85,25 @@ app.use((err, req, res, next) => {
 // INICIAR SERVIDOR
 // ============================================
 
-app.listen(PORT, () => {
-  console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
-  console.log(`📝 Entorno: ${process.env.NODE_ENV || 'development'}`);
-});
+// Sincronizar base de datos opcionalmente al iniciar (solo si SYNC_DB_ON_STARTUP === 'true')
+const { syncDatabase } = require('./models');
+
+(async () => {
+  if (process.env.SYNC_DB_ON_STARTUP === 'true') {
+    try {
+      const mode = process.env.DB_SYNC_MODE === 'force' ? { force: true } : { alter: true };
+      console.log('🔄 Sincronizando base de datos al iniciar...', mode);
+      await syncDatabase(mode);
+    } catch (err) {
+      console.error('❌ Error sincronizando la base de datos al iniciar:', err.message);
+    }
+  }
+
+  app.listen(PORT, () => {
+    console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`📝 Entorno: ${process.env.NODE_ENV || 'development'}`);
+  });
+})();
 
 // Exportar app para testing (opcional)
 module.exports = app;

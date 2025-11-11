@@ -20,6 +20,16 @@ const register = async (req, res, next) => {
       });
     }
 
+    // Validar fortaleza de la contraseña
+    // Reglas: mínimo 6 caracteres, al menos 1 mayúscula, 1 minúscula y 1 número
+    const passwordPolicyRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
+    if (!passwordPolicyRegex.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: 'La contraseña debe tener al menos 6 caracteres, una mayúscula, una minúscula y un número'
+      });
+    }
+
     // Validar que el rol sea válido
     const validRoles = ['admin', 'cook', 'waiter'];
     if (!validRoles.includes(role)) {
@@ -217,6 +227,16 @@ const resetPassword = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: 'Token y nueva contraseña son requeridos'
+      });
+    }
+
+    // Validar fortaleza de la contraseña
+    // Reglas: mínimo 6 caracteres, al menos 1 mayúscula, 1 minúscula y 1 número
+    const passwordPolicyRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
+    if (!passwordPolicyRegex.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: 'La contraseña debe tener al menos 6 caracteres, una mayúscula, una minúscula y un número'
       });
     }
 
