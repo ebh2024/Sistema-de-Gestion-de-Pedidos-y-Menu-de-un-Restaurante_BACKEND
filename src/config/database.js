@@ -17,10 +17,9 @@ if (process.env.DB_DIALECT === 'sqlite') {
     process.env.DB_PASSWORD,
     {
       host: process.env.DB_HOST,
+      port: process.env.DB_PORT || 3306,
       dialect: process.env.DB_DIALECT || 'mysql',
       logging: false,
-      // For development, try socket connection
-      socketPath: process.env.DB_SOCKET || '/var/run/mysqld/mysqld.sock',
     }
   );
 }
