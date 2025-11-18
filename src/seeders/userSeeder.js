@@ -4,26 +4,26 @@ import { sequelize } from "../config/database.js";
 
 const users = [
   {
-    name: "Admin User",
+    name: "admin",
     email: "admin@example.com",
-    password: "password123",
+    password: "Password123",
     role: "admin",
   },
   {
-    name: "Cook User",
+    name: "cook",
     email: "cook@example.com",
-    password: "password123",
+    password: "Password123",
     role: "cook",
   },
   {
-    name: "Waiter User",
+    name: "waiter",
     email: "waiter@example.com",
-    password: "password123",
+    password: "Password123",
     role: "waiter",
   },
 ];
 
-const seedUsers = async () => {
+async function seedUsers() {
   try {
     // Solo sincronizar sin forzar recreación de tablas
     await sequelize.sync();
@@ -31,15 +31,31 @@ const seedUsers = async () => {
     for (const user of users) {
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(user.password, salt);
-      await User.create(user);
+
+      // Try to find existing user by email and update, or create new
+      const [existingUser, created] = await User.upsert(user, {
+        returning: true
+      });
+
+      if (created) {
+        console.log(`Created user: ${user.name}`);
+      } else {
+        console.log(`Updated user: ${user.name}`);
+      }
     }
 
     console.log("Users seeded successfully");
   } catch (error) {
     console.error("Error seeding users:", error);
+    throw error; // Re-throw to be caught by caller
   } finally {
     await sequelize.close();
   }
-};
+}
 
-seedUsers();
+module.exports = { seedUsers };
+
+// Ejecutar seeder si se llama directamente
+if (require.main === module) {
+  seedUsers();
+}

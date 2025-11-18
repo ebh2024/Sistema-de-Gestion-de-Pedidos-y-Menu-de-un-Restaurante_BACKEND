@@ -3,6 +3,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const morgan = require('morgan');
+const { syncDatabase } = require('./models');
 
 // Configurar variables de entorno
 dotenv.config();
@@ -86,10 +87,24 @@ app.use((err, req, res, next) => {
 // INICIAR SERVIDOR
 // ============================================
 
-app.listen(PORT, () => {
-  console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
-  console.log(`📝 Entorno: ${process.env.NODE_ENV || 'development'}`);
-});
+// Sincronizar base de datos y luego iniciar servidor
+const startServer = async () => {
+  try {
+    // Sincronizar base de datos (crear tablas si no existen)
+    await syncDatabase({ force: false, alter: true }); // alter: true para modificar tablas existentes
+
+    // Iniciar servidor
+    app.listen(PORT, () => {
+      console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+      console.log(`📝 Entorno: ${process.env.NODE_ENV || 'development'}`);
+    });
+  } catch (error) {
+    console.error('❌ Error al iniciar el servidor:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 // Exportar app para testing (opcional)
 module.exports = app;

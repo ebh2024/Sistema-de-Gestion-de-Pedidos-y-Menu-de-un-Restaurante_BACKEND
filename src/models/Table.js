@@ -7,9 +7,17 @@ const Table = sequelize.define('Table', {
     allowNull: false,
     unique: true
   },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   capacity: {
     type: DataTypes.INTEGER,
     allowNull: false
+  },
+  location: {
+    type: DataTypes.STRING,
+    allowNull: true
   },
   status: {
     type: DataTypes.ENUM('available', 'occupied', 'reserved'),
