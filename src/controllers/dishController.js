@@ -19,7 +19,14 @@ const getAllDishes = async (req, res, next) => {
     }
 
     // Get dishes using service
-    const dishes = await getDishes({ available: available === 'true', search });
+    const filters = {};
+    if (available !== undefined) {
+      filters.available = available === 'true';
+    }
+    if (search !== undefined) {
+      filters.search = search;
+    }
+    const dishes = await getDishes(filters);
 
     res.status(200).json({
       success: true,

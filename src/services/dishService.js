@@ -129,7 +129,7 @@ const dishExists = async (dishId) => {
  */
 const isDishAvailable = async (dishId) => {
   const dish = await Dish.findByPk(dishId);
-  return dish && dish.available;
+  return !!(dish && dish.available);
 };
 
 module.exports = {
