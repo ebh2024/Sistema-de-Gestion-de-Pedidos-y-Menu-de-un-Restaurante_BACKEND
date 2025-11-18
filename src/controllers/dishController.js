@@ -1,5 +1,5 @@
-const { Dish } = require('../models');
-const { Op } = require('sequelize');
+const { getDishes, getDishById, createDish, updateDish, deleteDish } = require('../services/dishService');
+const { validateDishCreation, validateDishUpdate, validateDishFilters } = require('../validators/dishValidators');
 
 /**
  * Obtener todos los platos
@@ -9,27 +9,17 @@ const getAllDishes = async (req, res, next) => {
   try {
     const { available, search } = req.query;
 
-    // Construir condiciones de búsqueda
-    const where = {};
-    
-    // Filtrar por disponibilidad si se especifica
-    if (available !== undefined) {
-      where.available = available === 'true';
+    // Validate filters
+    const filterValidation = validateDishFilters({ available, search });
+    if (!filterValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: filterValidation.errors.join(', ')
+      });
     }
 
-    // Buscar por nombre o descripción
-    if (search) {
-      where[Op.or] = [
-        { name: { [Op.like]: `%${search}%` } },
-        { description: { [Op.like]: `%${search}%` } }
-      ];
-    }
-
-    // Obtener todos los platos
-    const dishes = await Dish.findAll({
-      where,
-      order: [['created_at', 'DESC']]
-    });
+    // Get dishes using service
+    const dishes = await getDishes({ available: available === 'true', search });
 
     res.status(200).json({
       success: true,
@@ -45,24 +35,24 @@ const getAllDishes = async (req, res, next) => {
  * Obtener un plato por ID
  * GET /api/dishes/:id
  */
-const getDishById = async (req, res, next) => {
+const getDishByIdController = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const dish = await Dish.findByPk(id);
-
-    if (!dish) {
-      return res.status(404).json({
-        success: false,
-        message: 'Plato no encontrado'
-      });
-    }
+    // Get dish using service
+    const dish = await getDishById(id);
 
     res.status(200).json({
       success: true,
       data: dish
     });
   } catch (error) {
+    if (error.message.includes('no encontrado')) {
+      return res.status(404).json({
+        success: false,
+        message: error.message
+      });
+    }
     next(error);
   }
 };
@@ -71,55 +61,26 @@ const getDishById = async (req, res, next) => {
  * Crear un nuevo plato
  * POST /api/dishes
  */
-const createDish = async (req, res, next) => {
+const createDishController = async (req, res, next) => {
   try {
     const { name, description, price, available } = req.body;
 
-
-    // Validar nombre
-    if (typeof name !== 'string' || name.trim().length < 2 || name.trim().length > 100) {
+    // Validate input
+    const validation = validateDishCreation({ name, description, price, available });
+    if (!validation.isValid) {
       return res.status(400).json({
         success: false,
-        message: 'El nombre es requerido y debe tener entre 2 y 100 caracteres'
+        message: validation.errors.join(', ')
       });
     }
 
-    // Validar descripción (opcional)
-    if (description !== undefined && description !== null && (typeof description !== 'string' || description.length > 255)) {
-      return res.status(400).json({
-        success: false,
-        message: 'La descripción debe ser texto de hasta 255 caracteres'
-      });
-    }
-
-    // Validar precio
-    if (price === undefined || price === null || isNaN(price) || parseFloat(price) <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'El precio es requerido y debe ser un número positivo'
-      });
-    }
-
-    // Validar available (opcional)
-    if (available !== undefined && typeof available !== 'boolean') {
-      return res.status(400).json({
-        success: false,
-        message: 'El campo available debe ser booleano (true/false)'
-      });
-    }
-
-    // Crear el plato
-    const newDish = await Dish.create({
-      name,
-      description: description || null,
-      price: parseFloat(price),
-      available: available !== undefined ? available : true
-    });
+    // Create dish using service
+    const dish = await createDish({ name, description, price, available });
 
     res.status(201).json({
       success: true,
       message: 'Plato creado exitosamente',
-      data: newDish
+      data: dish
     });
   } catch (error) {
     next(error);
@@ -130,67 +91,22 @@ const createDish = async (req, res, next) => {
  * Actualizar un plato
  * PUT /api/dishes/:id
  */
-const updateDish = async (req, res, next) => {
+const updateDishController = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name, description, price, available } = req.body;
 
-    // Buscar el plato
-    const dish = await Dish.findByPk(id);
-
-    if (!dish) {
-      return res.status(404).json({
-        success: false,
-        message: 'Plato no encontrado'
-      });
-    }
-
-
-    // Validar nombre si se proporciona
-    if (name !== undefined) {
-      if (typeof name !== 'string' || name.trim().length < 2 || name.trim().length > 100) {
-        return res.status(400).json({
-          success: false,
-          message: 'El nombre debe tener entre 2 y 100 caracteres'
-        });
-      }
-    }
-
-    // Validar descripción si se proporciona
-    if (description !== undefined && description !== null) {
-      if (typeof description !== 'string' || description.length > 255) {
-        return res.status(400).json({
-          success: false,
-          message: 'La descripción debe ser texto de hasta 255 caracteres'
-        });
-      }
-    }
-
-    // Validar precio si se proporciona
-    if (price !== undefined) {
-      if (isNaN(price) || parseFloat(price) <= 0) {
-        return res.status(400).json({
-          success: false,
-          message: 'El precio debe ser un número positivo'
-        });
-      }
-    }
-
-    // Validar available si se proporciona
-    if (available !== undefined && typeof available !== 'boolean') {
+    // Validate input
+    const validation = validateDishUpdate({ name, description, price, available });
+    if (!validation.isValid) {
       return res.status(400).json({
         success: false,
-        message: 'El campo available debe ser booleano (true/false)'
+        message: validation.errors.join(', ')
       });
     }
 
-    // Actualizar el plato
-    await dish.update({
-      name: name || dish.name,
-      description: description !== undefined ? description : dish.description,
-      price: price ? parseFloat(price) : dish.price,
-      available: available !== undefined ? available : dish.available
-    });
+    // Update dish using service
+    const dish = await updateDish(id, { name, description, price, available });
 
     res.status(200).json({
       success: true,
@@ -198,6 +114,12 @@ const updateDish = async (req, res, next) => {
       data: dish
     });
   } catch (error) {
+    if (error.message.includes('no encontrado')) {
+      return res.status(404).json({
+        success: false,
+        message: error.message
+      });
+    }
     next(error);
   }
 };
@@ -206,37 +128,32 @@ const updateDish = async (req, res, next) => {
  * Eliminar un plato
  * DELETE /api/dishes/:id
  */
-const deleteDish = async (req, res, next) => {
+const deleteDishController = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    // Buscar el plato
-    const dish = await Dish.findByPk(id);
-
-    if (!dish) {
-      return res.status(404).json({
-        success: false,
-        message: 'Plato no encontrado'
-      });
-    }
-
-    // Eliminar el plato
-    await dish.destroy();
+    // Delete dish using service
+    await deleteDish(id);
 
     res.status(200).json({
       success: true,
       message: 'Plato eliminado exitosamente'
     });
   } catch (error) {
+    if (error.message.includes('no encontrado')) {
+      return res.status(404).json({
+        success: false,
+        message: error.message
+      });
+    }
     next(error);
   }
 };
 
 module.exports = {
   getAllDishes,
-  getDishById,
-  createDish,
-  updateDish,
-  deleteDish
+  getDishById: getDishByIdController,
+  createDish: createDishController,
+  updateDish: updateDishController,
+  deleteDish: deleteDishController
 };
-
