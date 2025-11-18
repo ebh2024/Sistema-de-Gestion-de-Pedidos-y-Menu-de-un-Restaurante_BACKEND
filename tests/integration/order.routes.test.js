@@ -23,6 +23,13 @@ jest.mock('../../src/models', () => ({
   }
 }));
 
+// Mock database config for transactions
+jest.mock('../../src/config/database', () => ({
+  sequelize: {
+    transaction: jest.fn()
+  }
+}));
+
 // Mock middlewares
 jest.mock('../../src/middlewares/auth', () => jest.fn((req, res, next) => {
   // Mock authenticated admin user
@@ -38,6 +45,7 @@ jest.mock('../../src/middlewares/checkRole', () => jest.fn(() => (req, res, next
 const request = require('supertest');
 const express = require('express');
 const { Order, OrderDetail, Dish, Table, User } = require('../../src/models');
+const { sequelize } = require('../../src/config/database');
 const orderRoutes = require('../../src/routes/orderRoutes');
 
 // Create test app
@@ -53,6 +61,13 @@ describe('Order Routes Integration Tests', () => {
   beforeEach(() => {
     // Clear all mocks before each test
     jest.clearAllMocks();
+
+    // Mock transaction
+    const mockTransaction = {
+      commit: jest.fn(),
+      rollback: jest.fn()
+    };
+    sequelize.transaction.mockResolvedValue(mockTransaction);
   });
 
   describe('POST /api/orders', () => {
@@ -122,16 +137,16 @@ describe('Order Routes Integration Tests', () => {
         status: 'pending'
       });
 
-      expect(Table.findByPk).toHaveBeenCalledWith(1);
-      expect(Dish.findByPk).toHaveBeenCalledWith(1);
-      expect(Dish.findByPk).toHaveBeenCalledWith(2);
+      expect(Table.findByPk).toHaveBeenCalledWith(1, { transaction: expect.any(Object) });
+      expect(Dish.findByPk).toHaveBeenCalledWith(1, { transaction: expect.any(Object) });
+      expect(Dish.findByPk).toHaveBeenCalledWith(2, { transaction: expect.any(Object) });
       expect(Order.create).toHaveBeenCalledWith({
         userId: 1,
         tableId: 1,
         total: 30.97,
         status: 'pending'
-      });
-      expect(mockTable.update).toHaveBeenCalledWith({ status: 'occupied' });
+      }, { transaction: expect.any(Object) });
+      expect(mockTable.update).toHaveBeenCalledWith({ status: 'occupied' }, { transaction: expect.any(Object) });
     });
 
     test('should return 400 for missing tableId', async () => {
@@ -368,7 +383,7 @@ describe('Order Routes Integration Tests', () => {
         .expect(200);
 
       expect(Order.findAll).toHaveBeenCalledWith({
-        where: { tableId: 1 },
+        where: { tableId: "1" },
         include: expect.any(Array),
         order: [['created_at', 'DESC']]
       });
@@ -602,21 +617,21 @@ describe('Order Routes Integration Tests', () => {
 
   describe('DELETE /api/orders/:id', () => {
     test('should delete order successfully', async () => {
-      const mockOrder = {
-        id: 1,
-        status: 'pending',
-        tableId: 1,
-        destroy: jest.fn()
-      };
-
       const mockTable = {
         id: 1,
         status: 'occupied',
         update: jest.fn()
       };
 
+      const mockOrder = {
+        id: 1,
+        status: 'pending',
+        tableId: 1,
+        Table: mockTable,
+        destroy: jest.fn()
+      };
+
       Order.findByPk.mockResolvedValue(mockOrder);
-      Table.findByPk.mockResolvedValue(mockTable);
       OrderDetail.destroy.mockResolvedValue();
 
       const response = await request(app)
