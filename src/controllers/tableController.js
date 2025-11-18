@@ -2,11 +2,11 @@ const { Table } = require('../models');
 
 /**
  * Obtener todas las mesas con filtros opcionales
- * GET /api/tables?number=1&status=available&minCapacity=2
+ * GET /api/tables?number=1&disponible=available&minCapacity=2
  */
 const getAllTables = async (req, res, next) => {
   try {
-    const { number, status, minCapacity, maxCapacity } = req.query;
+    const { number, disponible, minCapacity, maxCapacity } = req.query;
 
     const where = {};
 
@@ -18,8 +18,8 @@ const getAllTables = async (req, res, next) => {
       where.number = num;
     }
 
-    if (status !== undefined) {
-      where.status = status;
+    if (disponible !== undefined) {
+      where.status = disponible;
     }
 
     if (minCapacity !== undefined || maxCapacity !== undefined) {

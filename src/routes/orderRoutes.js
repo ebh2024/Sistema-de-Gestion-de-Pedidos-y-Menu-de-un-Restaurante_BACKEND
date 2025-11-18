@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middlewares/auth');
+const checkRole = require('../middlewares/checkRole');
 const {
   createOrder,
   getAllOrders,
   getOrderById,
   updateOrderStatus,
+  deleteOrder,
   generateOrderTicketPDF
 } = require('../controllers/orderController');
 
@@ -43,5 +45,12 @@ router.get('/:id/ticket', auth, generateOrderTicketPDF);
  * @access  Private
  */
 router.put('/:id', auth, updateOrderStatus);
+
+/**
+ * @route   DELETE /api/orders/:id
+ * @desc    Eliminar un pedido (solo admin)
+ * @access  Private (admin only)
+ */
+router.delete('/:id', auth, checkRole('admin'), deleteOrder);
 
 module.exports = router;

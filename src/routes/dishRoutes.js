@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateJWT } = require('../utils/jwt');
-const checkRole = require('../utils/checkRole');
+const auth = require('../middlewares/auth');
+const checkRole = require('../middlewares/checkRole');
 const {
   getAllDishes,
   getDishById,
@@ -28,23 +28,22 @@ router.get('/:id', getDishById);
 /**
  * @route   POST /api/dishes
  * @desc    Crear un nuevo plato
- * @access  Public
+ * @access  Private (Admin)
  */
-router.post('/', authenticateJWT, checkRole('admin'), createDish);
+router.post('/', auth, checkRole('admin'), createDish);
 
 /**
  * @route   PUT /api/dishes/:id
  * @desc    Actualizar un plato
- * @access  Public
+ * @access  Private (Admin)
  */
-router.put('/:id', authenticateJWT, checkRole('admin'), updateDish);
+router.put('/:id', auth, checkRole('admin'), updateDish);
 
 /**
  * @route   DELETE /api/dishes/:id
  * @desc    Eliminar un plato
- * @access  Public
+ * @access  Private (Admin)
  */
-router.delete('/:id', authenticateJWT, checkRole('admin'), deleteDish);
+router.delete('/:id', auth, checkRole('admin'), deleteDish);
 
 module.exports = router;
-

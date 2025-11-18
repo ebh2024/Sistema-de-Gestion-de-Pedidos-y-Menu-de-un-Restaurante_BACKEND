@@ -500,10 +500,85 @@ const generateOrderTicketPDF = async (req, res, next) => {
   }
 };
 
+/**
+ * Cancelar/eliminar un pedido (solo admin)
+ * DELETE /api/orders/:id
+ */
+const deleteOrder = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const { id } = req.params;
+    const userRole = req.user.role;
+
+    // Solo admin puede eliminar pedidos
+    if (userRole !== 'admin') {
+      await transaction.rollback();
+      return res.status(403).json({
+        success: false,
+        message: 'Solo los administradores pueden eliminar pedidos'
+      });
+    }
+
+    // Buscar el pedido
+    const order = await Order.findByPk(id, {
+      include: [
+        {
+          model: Table
+        }
+      ],
+      transaction
+    });
+
+    if (!order) {
+      await transaction.rollback();
+      return res.status(404).json({
+        success: false,
+        message: 'Pedido no encontrado'
+      });
+    }
+
+    // No permitir eliminar pedidos completados
+    if (order.status === 'completed') {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: 'No se puede eliminar un pedido completado'
+      });
+    }
+
+    // Liberar la mesa si estaba ocupada por este pedido
+    if (order.Table && order.Table.status === 'occupied') {
+      await order.Table.update({ status: 'available' }, { transaction });
+    }
+
+    // Eliminar los detalles del pedido primero (por foreign key)
+    await OrderDetail.destroy({
+      where: { orderId: id },
+      transaction
+    });
+
+    // Eliminar el pedido
+    await order.destroy({ transaction });
+
+    // Confirmar transacción
+    await transaction.commit();
+
+    res.status(200).json({
+      success: true,
+      message: 'Pedido eliminado exitosamente'
+    });
+  } catch (error) {
+    await transaction.rollback();
+    next(error);
+  }
+};
+
 module.exports = {
   createOrder,
   getAllOrders,
   getOrderById,
   updateOrderStatus,
+  deleteOrder,
   generateOrderTicketPDF
 };

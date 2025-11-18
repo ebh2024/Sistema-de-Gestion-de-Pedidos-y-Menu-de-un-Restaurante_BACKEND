@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const auth = require('../middlewares/auth');
+const checkRole = require('../middlewares/checkRole');
 const {
   getAllTables,
   getTableById,
@@ -10,12 +12,12 @@ const {
 
 /**
  * GET /api/tables
- * Optional query: number, status, minCapacity, maxCapacity
+ * Optional query: number, disponible, minCapacity, maxCapacity
  */
 router.get('/', getAllTables);
 router.get('/:id', getTableById);
-router.post('/', createTable);
-router.put('/:id', updateTable);
-router.delete('/:id', deleteTable);
+router.post('/', auth, checkRole('admin'), createTable);
+router.put('/:id', auth, checkRole('admin'), updateTable);
+router.delete('/:id', auth, checkRole('admin'), deleteTable);
 
 module.exports = router;

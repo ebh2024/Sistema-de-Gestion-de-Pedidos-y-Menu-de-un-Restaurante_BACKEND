@@ -50,14 +50,15 @@ const authRoutes = require('./routes/authRoutes');
 const dishRoutes = require('./routes/dishRoutes');
 const tableRoutes = require('./routes/tableRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const userRoutes = require('./routes/userRoutes');
+const orderDetailRoutes = require('./routes/orderDetailRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/dishes', dishRoutes);
 app.use('/api/tables', tableRoutes);
 app.use('/api/orders', orderRoutes);
-
-// TODO: Aquí irán las demás rutas
-// app.use('/api/users', userRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/order_details', orderDetailRoutes);
 
 // ============================================
 // MANEJO DE ERRORES

@@ -4,37 +4,51 @@ const { User } = require('../models');
 const { generateToken } = require('../utils/jwt');
 const { sendEmail, generatePasswordResetEmail } = require('../utils/emailService');
 
+// Role mapping constants
+const FRONTEND_TO_BACKEND_ROLES = {
+  'user': 'waiter',
+  'moderator': 'cook',
+  'admin': 'admin'
+};
+
+const BACKEND_TO_FRONTEND_ROLES = {
+  'waiter': 'user',
+  'cook': 'moderator',
+  'admin': 'admin'
+};
+
 /**
  * Controller para registrar un nuevo usuario
  * POST /api/auth/register
  */
 const register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { firstName, lastName, email, username, password, role } = req.body;
 
     // Validar campos requeridos
-    if (!name || !email || !password || !role) {
+    if (!firstName || !lastName || !email || !username || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Todos los campos son requeridos (name, email, password, role)'
+        message: 'Todos los campos son requeridos (firstName, lastName, email, username, password)'
       });
     }
 
-    // Validar que el rol sea válido
-    const validRoles = ['admin', 'cook', 'waiter'];
-    if (!validRoles.includes(role)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Rol inválido. Roles válidos: admin, cook, waiter'
-      });
-    }
+    // Map frontend roles to backend roles
+    const backendRole = FRONTEND_TO_BACKEND_ROLES[role] || 'waiter';
 
-    // Verificar si el usuario ya existe
-    const existingUser = await User.findOne({ where: { email } });
+    // Verificar si el usuario ya existe (por email o username)
+    const existingUser = await User.findOne({
+      where: {
+        [require('sequelize').Op.or]: [
+          { email },
+          { name: username } // Using name field to store username
+        ]
+      }
+    });
     if (existingUser) {
       return res.status(409).json({
         success: false,
-        message: 'El email ya está registrado'
+        message: 'El email o nombre de usuario ya está registrado'
       });
     }
 
@@ -44,11 +58,14 @@ const register = async (req, res, next) => {
 
     // Crear el usuario
     const newUser = await User.create({
-      name,
+      name: username, // Store username in name field
       email,
       password: hashedPassword,
-      role
+      role: backendRole
     });
+
+    // Map backend role to frontend role for response
+    const frontendRole = BACKEND_TO_FRONTEND_ROLES[newUser.role] || 'user';
 
     // Generar token JWT
     const token = generateToken({
@@ -57,19 +74,18 @@ const register = async (req, res, next) => {
       role: newUser.role
     });
 
-    // Respuesta exitosa
+    // Respuesta exitosa (formato esperado por el frontend)
     res.status(201).json({
       success: true,
-      message: 'Usuario registrado exitosamente',
-      data: {
-        user: {
-          id: newUser.id,
-          name: newUser.name,
-          email: newUser.email,
-          role: newUser.role
-        },
-        token
-      }
+      user: {
+        id: newUser.id,
+        username: newUser.name,
+        firstName: firstName,
+        lastName: lastName,
+        email: newUser.email,
+        role: frontendRole
+      },
+      token
     });
   } catch (error) {
     next(error);
@@ -82,18 +98,18 @@ const register = async (req, res, next) => {
  */
 const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
     // Validar campos requeridos
-    if (!email || !password) {
+    if (!username || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email y contraseña son requeridos'
+        message: 'Nombre de usuario y contraseña son requeridos'
       });
     }
 
-    // Buscar el usuario por email
-    const user = await User.findOne({ where: { email } });
+    // Buscar el usuario por username (almacenado en el campo name)
+    const user = await User.findOne({ where: { name: username } });
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -118,6 +134,9 @@ const login = async (req, res, next) => {
       });
     }
 
+    // Map backend roles to frontend roles
+    const frontendRole = BACKEND_TO_FRONTEND_ROLES[user.role] || 'user';
+
     // Generar token JWT
     const token = generateToken({
       id: user.id,
@@ -125,19 +144,18 @@ const login = async (req, res, next) => {
       role: user.role
     });
 
-    // Respuesta exitosa
+    // Respuesta exitosa (formato esperado por el frontend)
     res.status(200).json({
       success: true,
-      message: 'Login exitoso',
-      data: {
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role
-        },
-        token
-      }
+      user: {
+        id: user.id,
+        username: user.name,
+        firstName: user.name, // Using username as firstName for compatibility
+        lastName: '',
+        email: user.email,
+        role: frontendRole
+      },
+      token
     });
   } catch (error) {
     next(error);
@@ -263,4 +281,3 @@ module.exports = {
   forgotPassword,
   resetPassword
 };
-
