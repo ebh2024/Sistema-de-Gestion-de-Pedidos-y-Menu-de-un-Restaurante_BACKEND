@@ -78,7 +78,7 @@ const validateOrderFilters = (filters) => {
   }
 
   // Validate tableId filter
-  if (tableId && (isNaN(tableId) || parseInt(tableId) <= 0)) {
+  if (tableId !== undefined && tableId !== null && (isNaN(tableId) || parseInt(tableId) <= 0)) {
     errors.push('tableId debe ser un número positivo');
   }
 
