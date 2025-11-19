@@ -1,4 +1,5 @@
 const { Table } = require('../models');
+const { Op } = require('sequelize');
 
 /**
  * Obtener todas las mesas con filtros opcionales
@@ -19,7 +20,17 @@ const getAllTables = async (req, res, next) => {
     }
 
     if (disponible !== undefined) {
-      where.status = disponible;
+      const validStatuses = ['available', 'occupied', 'reserved'];
+      const disp = String(disponible).toLowerCase();
+      if (disp === 'true') {
+        where.status = 'available';
+      } else if (disp === 'false') {
+        where.status = { [Op.ne]: 'available' };
+      } else if (validStatuses.includes(disp)) {
+        where.status = disp;
+      } else {
+        return res.status(400).json({ success: false, message: 'Parámetro disponible inválido' });
+      }
     }
 
     if (minCapacity !== undefined || maxCapacity !== undefined) {
@@ -27,12 +38,12 @@ const getAllTables = async (req, res, next) => {
       if (minCapacity !== undefined) {
         const min = parseInt(minCapacity, 10);
         if (isNaN(min)) return res.status(400).json({ success: false, message: 'minCapacity inválido' });
-        where.capacity['$gte'] = min; // sequelize will translate correctly via where object
+        where.capacity[Op.gte] = min;
       }
       if (maxCapacity !== undefined) {
         const max = parseInt(maxCapacity, 10);
         if (isNaN(max)) return res.status(400).json({ success: false, message: 'maxCapacity inválido' });
-        where.capacity['$lte'] = max;
+        where.capacity[Op.lte] = max;
       }
     }
 

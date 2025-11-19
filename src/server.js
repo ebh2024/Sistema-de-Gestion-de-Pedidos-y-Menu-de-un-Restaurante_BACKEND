@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const morgan = require('morgan');
 const { syncDatabase } = require('./models');
+const { ensureConstraints } = require('./utils/db/ensureConstraints');
 
 // Configurar variables de entorno
 dotenv.config();
@@ -18,9 +19,19 @@ const PORT = process.env.PORT || 3000;
 // MIDDLEWARES GLOBALES
 // ============================================
 
-// CORS - Permitir peticiones desde el frontend
+// CORS - Permitir peticiones desde el frontend (soporta múltiples orígenes)
+const allowedOrigins = (() => {
+  const list = process.env.FRONTEND_URLS || process.env.FRONTEND_URL || 'http://localhost:5173';
+  return list.split(',').map(s => s.trim());
+})();
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // URL de Vite por defecto
+  origin: (origin, callback) => {
+    // permitir solicitudes sin origin (como curl, Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`Origen no permitido por CORS: ${origin}`));
+  },
   credentials: true
 }));
 
@@ -84,27 +95,25 @@ app.use((err, req, res, next) => {
 });
 
 // ============================================
-// INICIAR SERVIDOR
+// INICIAR SERVIDOR (con sync de base de datos)
 // ============================================
 
-// Sincronizar base de datos y luego iniciar servidor
-const startServer = async () => {
+(async () => {
   try {
     // Sincronizar base de datos (crear tablas si no existen)
-    await syncDatabase({ force: false, alter: true }); // alter: true para modificar tablas existentes
+    await syncDatabase();
+    // Asegurar claves foráneas correctas (corrige referencias con mayúsculas)
+    await ensureConstraints();
 
-    // Iniciar servidor
     app.listen(PORT, () => {
       console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
       console.log(`📝 Entorno: ${process.env.NODE_ENV || 'development'}`);
     });
   } catch (error) {
-    console.error('❌ Error al iniciar el servidor:', error);
+    console.error('❌ No se pudo iniciar el servidor por error al sincronizar la base de datos:', error);
     process.exit(1);
   }
-};
-
-startServer();
+})();
 
 // Exportar app para testing (opcional)
 module.exports = app;

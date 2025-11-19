@@ -11,7 +11,7 @@ const OrderDetail = sequelize.define('OrderDetail', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'Orders',
+      model: 'orders',
       key: 'id'
     }
   },

@@ -23,6 +23,8 @@ const Table = sequelize.define('Table', {
     type: DataTypes.ENUM('available', 'occupied', 'reserved'),
     defaultValue: 'available'
   }
+}, {
+  tableName: 'tables'
 });
 
 module.exports = Table;

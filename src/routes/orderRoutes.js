@@ -16,7 +16,7 @@ const {
  * @desc    Crear un nuevo pedido
  * @access  Private (waiter, admin)
  */
-router.post('/', auth, createOrder);
+router.post('/', auth, checkRole('waiter', 'admin'), createOrder);
 
 /**
  * @route   GET /api/orders
@@ -42,9 +42,9 @@ router.get('/:id/ticket', auth, generateOrderTicketPDF);
 /**
  * @route   PUT /api/orders/:id
  * @desc    Actualizar estado de un pedido
- * @access  Private
+ * @access  Private (cook, waiter, admin)
  */
-router.put('/:id', auth, updateOrderStatus);
+router.put('/:id', auth, checkRole('cook', 'waiter', 'admin'), updateOrderStatus);
 
 /**
  * @route   DELETE /api/orders/:id

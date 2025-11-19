@@ -64,6 +64,7 @@ const getAllOrders = async (req, res, next) => {
   try {
     const { status, tableId, startDate, endDate } = req.query;
     const userRole = req.user.role;
+    const userId = req.user.id;
 
     // Validate filters
     const filterValidation = validateOrderFilters({ status, tableId, startDate, endDate });
@@ -74,8 +75,8 @@ const getAllOrders = async (req, res, next) => {
       });
     }
 
-    // Get orders using service
-    const orders = await getOrders({ status, tableId, startDate, endDate }, userRole);
+    // Get orders using service (role-aware, passing userId for waiter filtering)
+    const orders = await getOrders({ status, tableId, startDate, endDate }, userRole, userId);
 
     res.status(200).json({
       success: true,

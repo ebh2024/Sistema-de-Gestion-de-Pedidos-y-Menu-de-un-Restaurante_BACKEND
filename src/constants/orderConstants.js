@@ -22,12 +22,8 @@ const ORDER_STATUS_TRANSITIONS = {
     [ORDER_STATUSES.CANCELLED]: []
   },
   waiter: {
-    // Waiters can start preparing orders and cancel any order
-    allowedTransitions: (currentStatus, newStatus) => {
-      if (newStatus === ORDER_STATUSES.CANCELLED) return true;
-      if (currentStatus === ORDER_STATUSES.PENDING && newStatus === ORDER_STATUSES.IN_PROGRESS) return true;
-      return false;
-    }
+    // Mesero NO puede cambiar estados
+    allowedTransitions: () => false
   },
   admin: {
     // Admins can make any transition
